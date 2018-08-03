@@ -54,8 +54,8 @@ if (args.input) {
     const inputDoc = yaml.safeLoad(fs.readFileSync(args.input, 'utf8'));
     const outputFile = args.output || args.input.replace(/(yaml|yml|json)$/i, 'md');
 
-    let matchPathRe = (typeof args.matchPath == 'string' ? new RegExp (args.matchPath, "g") : null);
-    let matchDefnRe = (typeof args.matchDefn == 'string' ? new RegExp (args.matchDefn, "g") : null);
+    const matchPathRe = (typeof args.matchPath === 'string' ? new RegExp(args.matchPath, 'g') : null);
+    const matchDefnRe = (typeof args.matchDefn === 'string' ? new RegExp(args.matchDefn, 'g') : null);
 
     // Collect parameters
     const parameters = ('parameters' in inputDoc) ? inputDoc.parameters : {};
@@ -77,22 +77,24 @@ if (args.input) {
     // Process Paths
     if ('paths' in inputDoc) {
       Object.keys(inputDoc.paths).forEach(path => {
-          if (matchPathRe == null || path.match(matchPathRe) != null) {
-            document.push(transformPath(
-              path,
-              inputDoc.paths[path],
-              parameters));
-          }
-          else console.log (`Skipping path '${path}'`)
-      }
-    );
+        if (matchPathRe == null || path.match(matchPathRe) != null) {
+          document.push(transformPath(
+            path,
+            inputDoc.paths[path],
+            parameters
+          ));
+        } else {
+          console.log(`Skipping path '${path}'`);
+        }
+      });
     }
 
     // Models (definitions)
     if ('definitions' in inputDoc) {
       document.push(transformDefinition(
-        inputDoc.definitions, 
-        { matchDefnRe }));
+        inputDoc.definitions,
+        { matchDefnRe }
+      ));
     }
 
     fs.writeFile(outputFile, document.join('\n'), err => {

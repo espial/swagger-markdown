@@ -65,19 +65,22 @@ module.exports.processDefinition = processDefinition;
 
 /**
  * @param {type} definitions
- * @param {object} opts May contain 'matchDefnRe' with a RegExp instance to use to select definitions.
+ * @param {object} opts May contain 'matchDefnRe' with a RegExp
+ *                      instance to use to select definitions.
  * @return {type} Description
  */
 module.exports = (definitions, opts) => {
   const res = [];
   Object.keys(definitions).map(definitionName => {
-      if (!opts || !opts.matchDefnRe || definitionName.match (opts.matchDefnRe)) {
-        res.push(processDefinition(
-            definitionName,
-            definitions[definitionName]));
-      }
-      else console.log (`Skipping definition '${definitionName}'`)
-    });
+    if (!opts || !opts.matchDefnRe || definitionName.match(opts.matchDefnRe)) {
+      res.push(processDefinition(
+        definitionName,
+        definitions[definitionName]
+      ));
+    } else {
+      console.log(`Skipping definition '${definitionName}'`);
+    }
+  });
   if (res.length > 0) {
     res.unshift('### Models\n');
     return res.join('\n');
