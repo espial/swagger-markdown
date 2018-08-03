@@ -27,6 +27,18 @@ parser.addArgument(['-o', '--output'], {
   metavar: '',
   dest: 'output'
 });
+parser.addArgument(['--match-path'], {
+  help: 'Include paths that match the specified regex',
+  metavar: '',
+  type: 'string',
+  dest: 'matchPath'
+});
+parser.addArgument(['--match-defn'], {
+  help: 'Include definitions that match the specified regex',
+  metavar: '',
+  type: 'string',
+  dest: 'matchDefn'
+});
 parser.addArgument(['--skip-info'], {
   action: Action.storeTrue,
   nargs: 0,
@@ -35,13 +47,15 @@ parser.addArgument(['--skip-info'], {
   dest: 'skipInfo'
 });
 const args = parser.parseArgs();
-
 if (args.input) {
   const document = [];
 
   try {
     const inputDoc = yaml.safeLoad(fs.readFileSync(args.input, 'utf8'));
     const outputFile = args.output || args.input.replace(/(yaml|yml|json)$/i, 'md');
+
+    let matchPathRe = (typeof args.matchPath == 'string' ? new RegExp (args.matchPath, "g") : null);
+    let matchDefnRe = (typeof args.matchDefn == 'string' ? new RegExp (args.matchDefn, "g") : null);
 
     // Collect parameters
     const parameters = ('parameters' in inputDoc) ? inputDoc.parameters : {};
@@ -62,16 +76,23 @@ if (args.input) {
 
     // Process Paths
     if ('paths' in inputDoc) {
-      Object.keys(inputDoc.paths).forEach(path => document.push(transformPath(
-        path,
-        inputDoc.paths[path],
-        parameters
-      )));
+      Object.keys(inputDoc.paths).forEach(path => {
+          if (matchPathRe == null || path.match(matchPathRe) != null) {
+            document.push(transformPath(
+              path,
+              inputDoc.paths[path],
+              parameters));
+          }
+          else console.log (`Skipping path '${path}'`)
+      }
+    );
     }
 
     // Models (definitions)
     if ('definitions' in inputDoc) {
-      document.push(transformDefinition(inputDoc.definitions));
+      document.push(transformDefinition(
+        inputDoc.definitions, 
+        { matchDefnRe }));
     }
 
     fs.writeFile(outputFile, document.join('\n'), err => {
